@@ -1,0 +1,78 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Flow • Register</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="auth-page">
+  <main class="auth-shell">
+    <div class="top-nav" style="margin-top:0;">
+      <a href="#" class="clear-link js-back-link" data-fallback="/login">Back</a>
+    </div>
+    <section class="auth-card">
+      <% const safeInitialAccountType = typeof initialAccountType === 'string' ? initialAccountType : 'personal'; %>
+      <h1>Create Account</h1>
+      <p>Register a new user account to sign in.</p>
+
+      <% if (error) { %>
+        <p class="auth-error"><%= error %></p>
+      <% } %>
+      <% if (message) { %>
+        <p class="auth-success"><%= message %></p>
+      <% } %>
+
+      <form action="/register" method="POST" class="task-form auth-form">
+        <label for="account_type">Account Type</label>
+        <select id="account_type" name="account_type">
+          <option value="personal" <%= safeInitialAccountType === 'team_leader' ? '' : 'selected' %>>Personal Account</option>
+          <option value="team_leader" <%= safeInitialAccountType === 'team_leader' ? 'selected' : '' %>>Team Account</option>
+        </select>
+
+        <label for="username">Username</label>
+        <input id="username" type="text" name="username" placeholder="e.g. Amina" required />
+
+        <label for="email">Email</label>
+        <input id="email" type="email" name="email" placeholder="you@example.com" required />
+
+        <label for="password">Password</label>
+        <input id="password" type="password" name="password" minlength="8" placeholder="At least 8 characters" required />
+
+        <div id="team_name_group" style="<%= safeInitialAccountType === 'team_leader' ? '' : 'display:none;' %>">
+          <label for="team_name">Team Name</label>
+          <input id="team_name" type="text" name="team_name" placeholder="e.g. Product Team" <%= safeInitialAccountType === 'team_leader' ? 'required' : '' %> />
+        </div>
+
+        <button type="submit">Create Account</button>
+      </form>
+
+      <p class="auth-helper">
+        Already have an account? <a href="/login">Sign in</a>.
+      </p>
+    </section>
+  </main>
+  <script>
+    (function () {
+      const accountTypeSelect = document.getElementById("account_type");
+      const teamGroup = document.getElementById("team_name_group");
+      const teamInput = document.getElementById("team_name");
+
+      function syncTeamField() {
+        const isTeamLeader = accountTypeSelect.value === "team_leader";
+        teamGroup.style.display = isTeamLeader ? "" : "none";
+        teamInput.required = isTeamLeader;
+        if (!isTeamLeader) teamInput.value = "";
+      }
+
+      accountTypeSelect.addEventListener("change", syncTeamField);
+      syncTeamField();
+    })();
+  </script>
+  <script src="/buttons.js"></script>
+</body>
+</html>
+
+
+

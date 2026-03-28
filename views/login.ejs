@@ -1,0 +1,85 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Flow • Sign In</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="auth-page">
+  <main class="auth-shell auth-shell--wide">
+    <div class="auth-brand">
+      <h1>Task Flow</h1>
+      <p>Plan clearly, focus better, finish more.</p>
+    </div>
+    <% if (error) { %>
+      <p class="auth-error" style="width:min(500px,100%);margin:0 auto 12px;"><%= error %></p>
+    <% } %>
+    <% if (message) { %>
+      <p class="auth-success" style="width:min(500px,100%);margin:0 auto 12px;"><%= message %></p>
+    <% } %>
+
+    <div class="login-choice">
+      <button type="button" class="login-type-btn active" id="btnPersonal" onclick="switchType('personal')">
+        <span class="login-type-icon">&#128100;</span>
+        <span class="login-type-label">Personal</span>
+        <span class="login-type-sub">My own task list</span>
+      </button>
+      <button type="button" class="login-type-btn" id="btnTeam" onclick="switchType('team')">
+        <span class="login-type-icon">&#128101;</span>
+        <span class="login-type-label">Team</span>
+        <span class="login-type-sub">Team workspace</span>
+      </button>
+    </div>
+
+    <section class="auth-card" style="margin-top:16px;">
+      <div id="personalLogin">
+        <h2 style="text-align:center;margin-bottom:4px;">Personal Sign In</h2>
+        <p style="text-align:center;margin-bottom:16px;font-size:0.88rem;">Use this for Personal and Admin accounts.</p>
+        <form action="/login" method="POST" class="task-form auth-form">
+          <input type="hidden" name="returnTo" value="<%= returnTo %>" />
+          <input type="hidden" name="login_type" value="personal" />
+          <label for="identifier">Username or Email</label>
+          <input id="identifier" type="text" name="identifier" placeholder="username or you@example.com" required />
+          <label for="password">Password</label>
+          <input id="password" type="password" name="password" placeholder="Enter password" required />
+          <button type="submit">Sign In</button>
+        </form>
+        <p class="auth-helper">Forgot your password? <a href="/reset-password">Reset it here</a>.</p>
+        <p class="auth-helper">New here? <a href="/register">Create a personal account</a>.</p>
+      </div>
+
+      <div id="teamLogin" style="display:none;">
+        <h2 style="text-align:center;margin-bottom:4px;">Team Sign In</h2>
+        <p style="text-align:center;margin-bottom:16px;font-size:0.88rem;">Use this for Team Leader and Team Member accounts.</p>
+        <form action="/login" method="POST" class="task-form auth-form">
+          <input type="hidden" name="returnTo" value="<%= returnTo %>" />
+          <input type="hidden" name="login_type" value="team" />
+          <label for="team_identifier">Username or Email</label>
+          <input id="team_identifier" type="text" name="identifier" placeholder="username or you@example.com" required />
+          <label for="team_password">Password</label>
+          <input id="team_password" type="password" name="password" placeholder="Enter password" required />
+          <button type="submit" style="background:var(--brand-accent);">Sign In to Team</button>
+        </form>
+        <p class="auth-helper">Added by your Team Leader? <a href="/join-team">Join Team</a>.</p>
+        <p class="auth-helper">Team Leader? <a href="/register?accountType=team_leader">Create a team workspace</a>.</p>
+        <p class="auth-helper">Forgot your password? <a href="/reset-password">Reset it here</a>.</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    function switchType(type) {
+      document.getElementById('personalLogin').style.display = type === 'personal' ? '' : 'none';
+      document.getElementById('teamLogin').style.display     = type === 'team'     ? '' : 'none';
+      document.getElementById('btnPersonal').classList.toggle('active', type === 'personal');
+      document.getElementById('btnTeam').classList.toggle('active',     type === 'team');
+    }
+    const params = new URLSearchParams(location.search);
+    if (params.get('type') === 'team') switchType('team');
+  </script>
+  <script src="/buttons.js"></script>
+</body>
+</html>
+

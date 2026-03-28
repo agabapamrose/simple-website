@@ -1,0 +1,23 @@
+{
+  "name": "simple-website",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": "20.x"
+  },
+  "main": "firebase.functions.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node tests/run-tests.js",
+    "firebase:serve": "npx firebase emulators:start --only hosting",
+    "firebase:deploy": "npx firebase deploy --only hosting"
+  },
+  "dependencies": {
+    "ejs": "^5.0.1",
+    "express": "^5.2.1",
+    "firebase-functions": "^6.5.0",
+    "mysql2": "^3.18.2",
+    "nodemailer": "^7.0.13"
+  }
+}

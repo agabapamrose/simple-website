@@ -1,0 +1,53 @@
+mutation CreateSeedData @transaction @auth(level: PUBLIC, insecureReason: "This is a seed data mutation, intended for initial database population, and does not expose sensitive information.") {
+  user_insertMany(data: [
+    {
+      id: "b455c179-81a1-4221-a58d-7e30d4a964f4",
+      displayName: "Alice Smith",
+      email: "alice.smith@example.com",
+      createdAt: "2023-01-01T10:00:00Z"
+    },
+    {
+      id: "e4d7f5c2-9b2e-4b8c-8c7a-1f0e2d3c4b5a",
+      displayName: "Bob Johnson",
+      email: "bob.johnson@example.com",
+      createdAt: "2023-01-02T11:00:00Z"
+    }
+  ])
+  taskList_insertMany(data: [
+    {
+      id: "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+      userId: "b455c179-81a1-4221-a58d-7e30d4a964f4",
+      name: "Alice's Work Tasks",
+      description: "Important tasks for work",
+      createdAt: "2023-01-03T09:00:00Z"
+    },
+    {
+      id: "f9e8d7c6-b5a4-3210-fedc-ba9876543210",
+      userId: "e4d7f5c2-9b2e-4b8c-8c7a-1f0e2d3c4b5a",
+      name: "Bob's Home Chores",
+      description: "Tasks to do around the house",
+      createdAt: "2023-01-04T12:00:00Z"
+    }
+  ])
+  task_insertMany(data: [
+    {
+      userId: "b455c179-81a1-4221-a58d-7e30d4a964f4",
+      taskListId: "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+      title: "Complete Project Proposal",
+      isComplete: false,
+      createdAt: "2023-01-05T13:00:00Z",
+      dueDate: "2023-01-15T17:00:00Z",
+      priority: "High",
+      description: "Draft and finalize the project proposal document."
+    },
+    {
+      userId: "e4d7f5c2-9b2e-4b8c-8c7a-1f0e2d3c4b5a",
+      taskListId: "f9e8d7c6-b5a4-3210-fedc-ba9876543210",
+      title: "Clean Kitchen",
+      isComplete: false,
+      createdAt: "2023-01-06T10:00:00Z",
+      priority: "Medium",
+      description: "Wash dishes, wipe counters, and sweep floor."
+    }
+  ])
+}

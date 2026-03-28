@@ -1,0 +1,77 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Flow • Edit Task</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <% const canManageUsersRoles = permissions?.canManageUsersRoles; %>
+  <% const safeTeamMembers = typeof teamMembers !== 'undefined' && Array.isArray(teamMembers) ? teamMembers : []; %>
+  <% const canAssignTask = roleName === 'Team Leader' || permissions?.canManageUsersRoles; %>
+  <% const pathName = typeof currentPath === 'string' ? currentPath : ''; %>
+  <% const isCurrent = (targetPath) => pathName === targetPath; %>
+  <% const isTasksSection = pathName === '/tasks' || pathName.startsWith('/edit/'); %>
+  <div class="shell">
+  <h1>Edit Task</h1>
+  <div class="top-nav">
+    <a href="/home" class="clear-link <%= isCurrent('/home') ? 'active' : '' %>" <%= isCurrent('/home') ? 'aria-current="page"' : '' %>>Home</a>
+    <a href="/tasks" class="clear-link <%= isTasksSection ? 'active' : '' %>" <%= isTasksSection ? 'aria-current="page"' : '' %>>Tasks</a>
+    <% if (canManageUsersRoles) { %>
+      <a href="/admin/logs" class="clear-link <%= isCurrent('/admin/logs') ? 'active' : '' %>" <%= isCurrent('/admin/logs') ? 'aria-current="page"' : '' %>>System Logs</a>
+    <% } %>
+    <form action="/logout" method="POST" class="logout-inline">
+      <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
+      <button type="submit" class="clear-btn">Logout</button>
+    </form>
+  </div>
+
+  <form action="/update/<%= task.id %>" method="POST" class="task-form">
+    <input type="hidden" name="returnTo" value="<%= returnTo %>" />
+    <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
+    <input type="text" name="title" value="<%= task.title %>" required />
+
+    <select name="status">
+      <option value="Pending" <%= task.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+      <option value="In Progress" <%= task.status === 'In Progress' ? 'selected' : '' %>>In Progress</option>
+      <option value="Completed" <%= task.status === 'Completed' ? 'selected' : '' %>>Completed</option>
+    </select>
+
+    <select name="priority">
+      <option value="High" <%= task.priority === 'High' ? 'selected' : '' %>>High</option>
+      <option value="Medium" <%= !task.priority || task.priority === 'Medium' ? 'selected' : '' %>>Medium</option>
+      <option value="Low" <%= task.priority === 'Low' ? 'selected' : '' %>>Low</option>
+    </select>
+
+    <input type="date" name="due_date" value="<%= task.due_date ? ((task.due_date instanceof Date ? task.due_date.toISOString() : String(task.due_date)).slice(0, 10)) : '' %>" />
+
+    <% if (canAssignTask) { %>
+      <select name="assignee_user_id">
+        <option value="">Unassigned</option>
+        <% if (!safeTeamMembers.length) { %>
+          <option value="" disabled>No team members available</option>
+        <% } else { %>
+          <% safeTeamMembers.forEach(member => { %>
+            <option value="<%= member.id %>" <%= Number(task.assignee_user_id) === Number(member.id) ? 'selected' : '' %>><%= member.username %> (<%= member.email %>)</option>
+          <% }) %>
+        <% } %>
+      </select>
+    <% } %>
+
+    <button type="submit">Update Task</button>
+  </form>
+
+  <p style="text-align:center;"><a href="<%= returnTo %>">Back to To-Do List</a></p>
+
+  <footer class="site-footer">
+    <p>Task Flow Footer | <a href="/home">Home</a> | <a href="/tasks">Tasks</a></p>
+  </footer>
+  </div>
+  <script src="/buttons.js"></script>
+</body>
+</html>
+
+
+

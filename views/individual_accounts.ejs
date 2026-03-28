@@ -1,0 +1,117 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Flow • Team User Accounts</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="users-page admin-page">
+  <% const activeAccounts = accounts.filter(account => account.user_is_active).length; %>
+  <% const pathName = typeof currentPath === "string" ? currentPath : ""; %>
+  <% const isCurrent = (targetPath) => pathName === targetPath; %>
+  <div class="shell admin-shell">
+    <section class="admin-hero">
+      <h1>Team User Accounts</h1>
+      <p class="admin-subtitle">View and manage user accounts attached to teams.</p>
+
+      <% if (error) { %><p class="auth-error"><%= error %></p><% } %>
+      <% if (message) { %><p class="auth-success"><%= message %></p><% } %>
+
+      <div class="top-nav">
+        <a href="/home" class="<%= isCurrent('/home') ? 'active' : '' %>" <%= isCurrent('/home') ? 'aria-current="page"' : '' %>>Home</a>
+        <a href="/tasks" class="<%= isCurrent('/tasks') ? 'active' : '' %>" <%= isCurrent('/tasks') ? 'aria-current="page"' : '' %>>Tasks</a>
+        <a href="/individual-accounts" class="<%= isCurrent('/individual-accounts') ? 'active' : '' %>" <%= isCurrent('/individual-accounts') ? 'aria-current="page"' : '' %>>Members</a>
+        <a href="/admin/logs" class="<%= isCurrent('/admin/logs') ? 'active' : '' %>" <%= isCurrent('/admin/logs') ? 'aria-current="page"' : '' %>>Logs</a>
+        <form action="/logout" method="POST" class="inline-form">
+          <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
+          <button type="submit" class="clear-btn">Logout</button>
+        </form>
+      </div>
+
+      <div class="admin-stats">
+        <article class="admin-stat">
+          <small>Team Users</small>
+          <strong><%= accounts.length %></strong>
+        </article>
+        <article class="admin-stat">
+          <small>Active Accounts</small>
+          <strong><%= activeAccounts %></strong>
+        </article>
+        <article class="admin-stat">
+          <small>Visible Teams</small>
+          <strong><%= teams.length %></strong>
+        </article>
+      </div>
+    </section>
+
+    <section class="task-form list-card table-card">
+      <div class="section-head">
+        <h2>Team User Directory</h2>
+        <p>Accounts listed here are users attached to your visible teams.</p>
+      </div>
+      <table>
+        <tr>
+          <th>User ID</th>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Team</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+        <% if (!accounts.length) { %>
+          <tr>
+            <td colspan="7" class="empty-state">No team user accounts found for your teams.</td>
+          </tr>
+        <% } %>
+        <% accounts.forEach(account => { %>
+          <tr>
+            <td><%= account.user_id %></td>
+            <td><%= account.username %></td>
+            <td><%= account.email %></td>
+            <td><%= account.team_name %></td>
+            <td>
+              <span class="status-pill <%= account.role_is_active ? 'is-on' : 'is-off' %>">
+                <%= account.role_name %>
+              </span>
+            </td>
+            <td>
+              <span class="status-pill <%= account.user_is_active ? 'is-on' : 'is-off' %>">
+                <%= account.user_is_active ? 'Active' : 'Inactive' %>
+              </span>
+            </td>
+            <td>
+              <% if (!account.user_is_active) { %>
+                <form action="/teams/members/activate-user/<%= account.user_id %>" method="POST" class="inline-form">
+                  <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
+                  <input type="hidden" name="return_to" value="/individual-accounts" />
+                  <button type="submit">Activate</button>
+                </form>
+                <form action="/teams/members/remove/<%= account.team_member_id %>" method="POST" class="inline-form">
+                  <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
+                  <input type="hidden" name="return_to" value="/individual-accounts" />
+                  <button type="submit" class="delete" onclick="return confirm('Delete this inactive member? This action cannot be undone.')">Delete</button>
+                </form>
+              <% } else { %>
+                <span class="muted">No action</span>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </table>
+    </section>
+  </div>
+
+  <footer class="site-footer">
+    <p>
+      Task Flow Footer | <a href="/home">Home</a> | <a href="/tasks">Tasks</a>
+    </p>
+  </footer>
+  <script src="/buttons.js"></script>
+</body>
+</html>
+
+
+

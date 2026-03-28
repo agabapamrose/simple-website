@@ -1,0 +1,46 @@
+query ListTasks {
+  tasks {
+    id
+    title
+    isComplete
+    createdAt
+    description
+    dueDate
+    priority
+    user {
+      id
+      displayName
+      email
+    }
+    taskList {
+      id
+      name
+    }
+  }
+}
+
+mutation AddTask(
+  $title: String!
+  $isComplete: Boolean!
+  $usersId: UUID!
+) {
+  task_insert(data: {
+    title: $title
+    isComplete: $isComplete
+    $userId: $userId
+  })
+}
+
+mutation UpdateTask(
+  $id: UUID!
+  $title: String!
+  $isComplete: Boolean!
+) {
+  task_update(
+    key: { id: $id }
+    data: {
+      title: $title
+      isComplete: $isComplete
+    }
+  )
+}

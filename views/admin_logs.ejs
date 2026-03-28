@@ -1,0 +1,45 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Flow • Admin Logs</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="users-page admin-page">
+  <% const pathName = typeof currentPath === "string" ? currentPath : ""; %>
+  <% const isCurrent = (targetPath) => pathName === targetPath; %>
+  <div class="shell admin-shell">
+    <section class="admin-hero">
+      <h1>System Logs</h1>
+      <p class="admin-subtitle">Recent server output and error logs.</p>
+
+      <% if (error) { %><p class="auth-error"><%= error %></p><% } %>
+      <% if (message) { %><p class="auth-success"><%= message %></p><% } %>
+
+      <div class="top-nav">
+        <a href="/home" class="<%= isCurrent('/home') ? 'active' : '' %>" <%= isCurrent('/home') ? 'aria-current="page"' : '' %>>Home</a>
+        <a href="/tasks" class="<%= isCurrent('/tasks') ? 'active' : '' %>" <%= isCurrent('/tasks') ? 'aria-current="page"' : '' %>>Tasks</a>
+        <a href="/admin/logs" class="<%= isCurrent('/admin/logs') ? 'active' : '' %>" <%= isCurrent('/admin/logs') ? 'aria-current="page"' : '' %>>System Logs</a>
+        <form action="/logout" method="POST" class="inline-form">
+          <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
+          <button type="submit" class="clear-btn">Logout</button>
+        </form>
+      </div>
+    </section>
+
+    <% logs.forEach((log) => { %>
+      <section class="task-form list-card table-card">
+        <div class="section-head">
+          <h2><%= log.title %></h2>
+          <p><code><%= log.path %></code></p>
+        </div>
+        <pre style="background:#0b1a2b;color:#e6edf7;padding:14px;border-radius:12px;overflow:auto;max-height:360px;white-space:pre-wrap;"><%= log.content %></pre>
+      </section>
+    <% }) %>
+  </div>
+  <script src="/buttons.js"></script>
+</body>
+</html>
+

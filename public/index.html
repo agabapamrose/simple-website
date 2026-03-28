@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Website</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <style>
+    :root {
+      --bg: #d8dcd8;
+      --text: #1f2d27;
+      --card: #f5f5f5;
+      --muted: #334b5a;
+      --pill-bg: #dbe8e3;
+      --pill-text: #0f6c54;
+      --card-border: #c8ceca;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: clamp(20px, 4vw, 36px);
+    }
+    .card {
+      width: min(1180px, 100%);
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: clamp(30px, 4.4vw, 44px);
+      box-shadow: 0 24px 42px rgba(31, 45, 39, 0.14);
+    }
+    h1 {
+      margin: 0 0 22px;
+      max-width: 20ch;
+      font-size: clamp(2.3rem, 5.6vw, 4.8rem);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+    }
+    p {
+      margin: 0 0 18px;
+      max-width: 48ch;
+      color: var(--muted);
+      font-size: clamp(1.05rem, 1.6vw, 1.9rem);
+      line-height: 1.35;
+    }
+    .tag {
+      display: inline-block;
+      margin-top: 14px;
+      padding: 14px 20px;
+      border-radius: 999px;
+      background: var(--pill-bg);
+      color: var(--pill-text);
+      font-weight: 600;
+      font-size: clamp(1rem, 1.4vw, 1.6rem);
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Your site is live on Firebase Hosting</h1>
+    <p>This project is now configured for Spark (free) plan static hosting only.</p>
+    <p>Dynamic features like login, database-backed tasks, and account management require a backend host.</p>
+    <span class="tag">Firebase Spark Static Mode</span>
+  </main>
+</body>
+</html>

@@ -1,0 +1,60 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Flow • Join Team</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="auth-page">
+  <% const hasInviteToken = typeof inviteToken === "string" && inviteToken.trim().length > 0; %>
+  <% const presetUsername = typeof invitedUsername === "string" ? invitedUsername : ""; %>
+  <% const presetTeamName = typeof invitedTeamName === "string" ? invitedTeamName : ""; %>
+  <main class="auth-shell auth-shell--wide">
+    <div class="auth-brand">
+      <h1>Join Team</h1>
+      <p>Activate your team member account and set your password.</p>
+    </div>
+
+    <div class="top-nav" style="margin-top:0;">
+      <a href="/login?type=team" class="clear-link">Back to Team Sign In</a>
+    </div>
+
+    <% if (error) { %>
+      <p class="auth-error" style="width:min(500px,100%);margin:0 auto 12px;"><%= error %></p>
+    <% } %>
+    <% if (message) { %>
+      <p class="auth-success" style="width:min(500px,100%);margin:0 auto 12px;"><%= message %></p>
+    <% } %>
+
+    <section class="auth-card" style="margin-top:16px;">
+      <h2 style="text-align:center;margin-bottom:4px;">Team Member Activation</h2>
+      <p style="text-align:center;margin-bottom:16px;font-size:0.88rem;">
+        <%= hasInviteToken ? "Your invite details are pre-filled. Set your password to continue." : "Use the same username your Team Leader entered for you." %>
+      </p>
+      <form action="/join-team" method="POST" class="task-form auth-form">
+        <% if (hasInviteToken) { %>
+          <input type="hidden" name="token" value="<%= inviteToken %>" />
+        <% } %>
+
+        <label for="username">Username</label>
+        <input id="username" type="text" name="username" placeholder="e.g. amina" value="<%= presetUsername %>" <%= hasInviteToken ? "readonly" : "" %> required />
+
+        <label for="team_name">Team Name</label>
+        <input id="team_name" type="text" name="team_name" placeholder="e.g. Product Team" value="<%= presetTeamName %>" <%= hasInviteToken ? "readonly" : "" %> required />
+
+        <label for="password">New Password</label>
+        <input id="password" type="password" name="password" placeholder="At least 8 characters" required />
+
+        <label for="confirm_password">Confirm Password</label>
+        <input id="confirm_password" type="password" name="confirm_password" placeholder="Re-enter password" required />
+
+        <button type="submit">Join Team</button>
+      </form>
+    </section>
+  </main>
+  <script src="/buttons.js"></script>
+</body>
+</html>
+

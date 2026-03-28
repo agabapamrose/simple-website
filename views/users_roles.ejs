@@ -1,0 +1,178 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Flow • User Directory</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="users-page admin-page">
+  <% const selectedAccountView = accountView || "all"; %>
+  <% const totalUsers = users.length; %>
+  <% const activeUsers = users.filter(user => user.is_active).length; %>
+  <% const inactiveUsers = totalUsers - activeUsers; %>
+  <% const adminUsers = users.filter(user => user.role_name === "Admin").length; %>
+  <% const teamLeaderUsers = users.filter(user => user.role_name === "Team Leader").length; %>
+  <% const personalUsers = users.filter(user => user.role_name === "Personal Account").length; %>
+  <% const memberUsers = users.filter(user => user.role_name === "Member").length; %>
+  <% const pathName = typeof currentPath === "string" ? currentPath : ""; %>
+  <% const isCurrent = (targetPath) => pathName === targetPath; %>
+  <div class="shell admin-shell">
+    <section class="admin-hero">
+      <h1>Admin User Directory</h1>
+      <p class="admin-subtitle">Manage app users, assign roles, and control account status.</p>
+
+      <% if (error) { %><p class="auth-error"><%= error %></p><% } %>
+      <% if (message) { %><p class="auth-success"><%= message %></p><% } %>
+
+      <div class="top-nav">
+        <a href="/home" class="<%= isCurrent('/home') ? 'active' : '' %>" <%= isCurrent('/home') ? 'aria-current="page"' : '' %>>Home</a>
+        <a href="/tasks" class="<%= isCurrent('/tasks') ? 'active' : '' %>" <%= isCurrent('/tasks') ? 'aria-current="page"' : '' %>>Tasks</a>
+        <a href="/admin/logs" class="<%= isCurrent('/admin/logs') ? 'active' : '' %>" <%= isCurrent('/admin/logs') ? 'aria-current="page"' : '' %>>System Logs</a>
+        <form action="/logout" method="POST" class="inline-form">
+          <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
+          <button type="submit" class="clear-btn">Logout</button>
+        </form>
+      </div>
+
+      <div class="admin-stats">
+        <article class="admin-stat">
+          <small>Total Users</small>
+          <strong id="usersTotalCount"><%= totalUsers %></strong>
+        </article>
+        <article class="admin-stat">
+          <small>Active</small>
+          <strong><%= activeUsers %></strong>
+        </article>
+        <article class="admin-stat">
+          <small>Inactive</small>
+          <strong><%= inactiveUsers %></strong>
+        </article>
+        <article class="admin-stat">
+          <small>Team Leaders</small>
+          <strong><%= teamLeaderUsers %></strong>
+        </article>
+      </div>
+      <p class="admin-subtitle users-role-line">
+        Roles in use: <strong>Admin (<%= adminUsers %>)</strong>, <strong>Team Leader (<%= teamLeaderUsers %>)</strong>, <strong>Personal Account (<%= personalUsers %>)</strong>, <strong>Member (<%= memberUsers %>)</strong>
+      </p>
+    </section>
+
+    <section class="task-form list-card table-card">
+      <div class="section-head">
+        <h2>Users Directory</h2>
+        <p>Assign roles and control account status for everyone using your app, including closed accounts.</p>
+      </div>
+
+      <div class="directory-toolbar">
+        <label for="userSearch" class="toolbar-field">
+          <span>Search</span>
+          <input id="userSearch" type="text" placeholder="Search username or email" />
+        </label>
+        <label for="roleFilter" class="toolbar-field">
+          <span>Role</span>
+          <select id="roleFilter">
+            <option value="">All roles</option>
+            <option value="Admin">Admin</option>
+            <option value="Team Leader">Team Leader</option>
+            <option value="Personal Account">Personal Account</option>
+            <option value="Member">Member</option>
+            <option value="No role">No role</option>
+          </select>
+        </label>
+        <label for="statusFilter" class="toolbar-field">
+          <span>Status</span>
+          <select id="statusFilter">
+            <option value="">All statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </label>
+      </div>
+
+      <p class="directory-meta">Showing <strong id="visibleUsersCount"><%= totalUsers %></strong> of <strong><%= totalUsers %></strong> users</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Team</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Assign Role</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="usersDirectoryBody">
+        <% if (!users.length) { %>
+          <tr class="users-empty-row">
+            <td colspan="8" class="empty-state">No users created yet.</td>
+          </tr>
+        <% } %>
+        <% users.forEach(user => { %>
+          <tr
+            data-search="<%= `${user.username} ${user.email} ${user.team_names || ''}`.toLowerCase() %>"
+            data-role="<%= (user.role_name || 'No role') %>"
+            data-status="<%= user.is_active ? 'active' : 'inactive' %>"
+          >
+            <td><%= user.id %></td>
+            <td><%= user.username %></td>
+            <td><%= user.email %></td>
+            <td><%= user.team_names || '-' %></td>
+            <td><%= user.role_name || 'No role' %></td>
+            <td>
+              <span class="status-pill <%= user.is_active ? 'is-on' : 'is-off' %>">
+                <%= user.is_active ? 'Active' : 'Inactive' %>
+              </span>
+            </td>
+            <td>
+              <form action="/users/assign-role/<%= user.id %>" method="POST" class="inline-form row-form">
+                <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
+                <select name="role_id">
+                  <option value="">No role</option>
+                  <% roles.forEach(role => { %>
+                    <option
+                      value="<%= role.id %>"
+                      <%= user.role_id === role.id ? 'selected' : '' %>
+                      <%= role.is_active ? '' : 'disabled' %>
+                    >
+                      <%= role.name %><%= role.is_active ? '' : ' (Inactive)' %>
+                    </option>
+                  <% }) %>
+                </select>
+                <button type="submit" data-loading-text="Assigning...">Assign</button>
+              </form>
+            </td>
+            <td>
+              <form action="/users/toggle/<%= user.id %>" method="POST" class="inline-form">
+                <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
+                <button type="submit" class="<%= user.is_active ? 'delete' : '' %>" data-loading-text="<%= user.is_active ? 'Deactivating...' : 'Activating...' %>">
+                  <%= user.is_active ? 'Deactivate' : 'Activate' %>
+                </button>
+              </form>
+              <% if (user.role_name !== 'Admin') { %>
+                <form action="/users/delete/<%= user.id %>" method="POST" class="inline-form">
+                  <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
+                  <button type="submit" class="delete" onclick="return confirm('Delete this user account permanently?')">Delete</button>
+                </form>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <footer class="site-footer">
+    <p>Task Flow Footer | <a href="/home">Home</a></p>
+  </footer>
+  <script src="/buttons.js"></script>
+</body>
+</html>
+
+
+

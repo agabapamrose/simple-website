@@ -1,0 +1,293 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Flow • Users</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="teams-page admin-page">
+  <% const activeTeams = teams.filter(team => team.is_active).length; %>
+  <% const canManageUsersRoles = permissions?.canManageUsersRoles; %>
+  <% const canManageTeams = permissions?.canManageTeams; %>
+  <% const canManageMembers = typeof locals.canManageMembers !== "undefined" ? locals.canManageMembers : false; %>
+  <% const canRemoveMembers = canManageUsersRoles || canManageMembers; %>
+  <% const canAssignTeamLeader = canManageUsersRoles || canManageMembers; %>
+  <% const safeDashboardStats = typeof dashboardStats === "object" && dashboardStats ? dashboardStats : { teamMembers: 0, activeTasks: 0, completedTasks: 0 }; %>
+  <% const fallbackTeamName = Array.isArray(teams) && teams.length && teams[0] && teams[0].name ? String(teams[0].name).trim() : ""; %>
+  <% const titleTeamName = typeof primaryTeamName === "string" && primaryTeamName.trim() ? primaryTeamName.trim() : (fallbackTeamName || "My Team"); %>
+  <% const titleCasedTeamName = titleTeamName.replace(/\w\S*/g, word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()); %>
+  <% const normalizedTitleTeamName = titleCasedTeamName || "My Team"; %>
+  <% const teamPageLabel = /team$/i.test(normalizedTitleTeamName) ? normalizedTitleTeamName : `${normalizedTitleTeamName} Team`; %>
+  <% const pathName = typeof currentPath === "string" ? currentPath : ""; %>
+  <% const isCurrent = (targetPath) => pathName === targetPath; %>
+  <% const displayError = canManageUsersRoles && error === "You do not have permission to access that page." ? "" : error; %>
+  <% const leaderCandidates = members.filter(member => Number.isInteger(member.team_id) && member.user_is_active && member.role_name === "Member"); %>
+  <div class="shell admin-shell">
+    <section class="admin-hero">
+      <h1><%= canManageUsersRoles ? "Users" : `Welcome To ${teamPageLabel} Page` %></h1>
+      <p class="admin-subtitle"><%= canManageUsersRoles ? "Manage users and assign roles for each group." : (canManageMembers ? "Manage members and team workload from here." : "View your team members and current workload.") %></p>
+
+      <% if (displayError) { %><p class="auth-error"><%= displayError %></p><% } %>
+      <% if (message) { %><p class="auth-success"><%= message %></p><% } %>
+
+      <div class="top-nav">
+        <a href="/home" class="<%= isCurrent('/home') ? 'active' : '' %>" <%= isCurrent('/home') ? 'aria-current="page"' : '' %>>Home</a>
+        <a href="/tasks" class="<%= isCurrent('/tasks') ? 'active' : '' %>" <%= isCurrent('/tasks') ? 'aria-current="page"' : '' %>>Tasks</a>
+        <% if (canManageUsersRoles) { %><a href="/admin/logs" class="<%= isCurrent('/admin/logs') ? 'active' : '' %>" <%= isCurrent('/admin/logs') ? 'aria-current="page"' : '' %>>System Logs</a><% } %>
+        <form action="/logout" method="POST" class="inline-form">
+          <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
+          <button type="submit" class="clear-btn">Logout</button>
+        </form>
+      </div>
+
+      <div class="admin-stats">
+        <% if (canManageUsersRoles) { %>
+          <article class="admin-stat">
+            <small>Total Teams</small>
+            <strong><%= teams.length %></strong>
+          </article>
+          <article class="admin-stat">
+            <small>Active Teams</small>
+            <strong><%= activeTeams %></strong>
+          </article>
+          <article class="admin-stat">
+            <small>Total Members</small>
+            <strong><%= members.length %></strong>
+          </article>
+        <% } else { %>
+          <article class="admin-stat">
+            <small>Team Members</small>
+            <strong><%= safeDashboardStats.teamMembers %></strong>
+          </article>
+          <article class="admin-stat">
+            <small>Active Tasks</small>
+            <strong><%= safeDashboardStats.activeTasks %></strong>
+          </article>
+          <article class="admin-stat">
+            <small>Completed Tasks</small>
+            <strong><%= safeDashboardStats.completedTasks %></strong>
+          </article>
+        <% } %>
+      </div>
+    </section>
+
+    <section class="admin-grid">
+      <% if (canManageMembers) { %>
+        <form action="/teams/members/add" method="POST" class="task-form admin-card">
+          <div class="section-head">
+            <h2>Add Team Member</h2>
+            <p><%= canManageTeams ? "Assign a user and role inside a team." : "Add a new member to your team." %></p>
+          </div>
+          <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
+
+          <label for="team_id">Team</label>
+          <select id="team_id" name="team_id" required>
+            <option value="">Select team</option>
+            <% teams.forEach(team => { %>
+              <option value="<%= team.id %>" <%= team.is_active ? "" : "disabled" %>>
+                <%= team.name %><%= team.is_active ? "" : " (Inactive)" %>
+              </option>
+            <% }) %>
+          </select>
+
+          <label for="new_username">Name</label>
+          <input id="new_username" type="text" name="new_username" placeholder="Full name" required />
+
+          <label for="new_email">Email (Optional)</label>
+          <input id="new_email" type="email" name="new_email" placeholder="name@example.com" />
+
+          <label for="role_id">Role</label>
+          <select id="role_id" name="role_id" required>
+            <option value="">Select role</option>
+            <% roles.forEach(role => { %>
+              <option value="<%= role.id %>" <%= role.is_active ? "" : "disabled" %>>
+                <%= role.name %><%= role.is_active ? "" : " (Inactive)" %>
+              </option>
+            <% }) %>
+          </select>
+
+          <button type="submit">Save Member</button>
+        </form>
+      <% } %>
+
+      <% if (canAssignTeamLeader) { %>
+        <form action="/teams/leader/assign" method="POST" class="task-form admin-card">
+          <div class="section-head">
+            <h2>Assign Team Leader</h2>
+            <p>Select a member to act as team leader when the current leader is unavailable.</p>
+          </div>
+          <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
+
+          <label for="leader_team_id">Team</label>
+          <select id="leader_team_id" name="team_id" required>
+            <option value="">Select team</option>
+            <% teams.forEach(team => { %>
+              <option value="<%= team.id %>" <%= team.is_active ? "" : "disabled" %>>
+                <%= team.name %><%= team.is_active ? "" : " (Inactive)" %>
+              </option>
+            <% }) %>
+          </select>
+
+          <label for="replacement_user_id">New Team Leader</label>
+          <select id="replacement_user_id" name="replacement_user_id" required disabled>
+            <option value="">Select member</option>
+            <% leaderCandidates.forEach(candidate => { %>
+              <option value="<%= candidate.user_id %>" data-team-id="<%= candidate.team_id %>">
+                <%= candidate.username %> (<%= candidate.team_name %>)
+              </option>
+            <% }) %>
+          </select>
+
+          <button type="submit">Assign Leader</button>
+        </form>
+      <% } %>
+    </section>
+
+    <% if (canManageUsersRoles) { %>
+      <section class="task-form list-card table-card">
+        <div class="section-head">
+          <h2>Team Directory</h2>
+          <p><%= canManageUsersRoles ? "Manage team status by activating or deactivating teams." : "Browse your teams and current status." %></p>
+        </div>
+        <table>
+          <tr>
+            <th>ID</th>
+            <th>Team</th>
+            <th>Members</th>
+            <th>Status</th>
+            <% if (canManageUsersRoles) { %><th>Action</th><% } %>
+          </tr>
+          <% if (!teams.length) { %>
+            <tr>
+              <td colspan="<%= canManageUsersRoles ? 5 : 4 %>" class="empty-state">No teams created yet.</td>
+            </tr>
+          <% } %>
+          <% teams.forEach(team => { %>
+            <tr>
+              <td><%= team.id %></td>
+              <td class="role-name-cell"><%= team.name %></td>
+              <td><%= team.member_count %></td>
+              <td>
+                <span class="status-pill <%= team.is_active ? 'is-on' : 'is-off' %>">
+                  <%= team.is_active ? 'Active' : 'Inactive' %>
+                </span>
+              </td>
+              <% if (canManageUsersRoles) { %>
+                <td>
+                  <form action="/teams/toggle/<%= team.id %>" method="POST" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
+                    <button type="submit" class="<%= team.is_active ? 'delete' : '' %>">
+                      <%= team.is_active ? 'Deactivate' : 'Activate' %>
+                    </button>
+                  </form>
+                </td>
+              <% } %>
+            </tr>
+          <% }) %>
+        </table>
+      </section>
+    <% } %>
+
+    <section class="task-form list-card table-card">
+      <div class="section-head">
+        <h2>Team Members</h2>
+        <p>All visible team members and their assigned team task counts.</p>
+      </div>
+      <table>
+        <tr>
+          <th>Team</th>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Tasks</th>
+          <% if (canRemoveMembers) { %><th>Action</th><% } %>
+        </tr>
+        <% if (!members.length) { %>
+          <tr>
+            <td colspan="<%= canRemoveMembers ? 6 : 5 %>" class="empty-state">No team members found.</td>
+          </tr>
+        <% } %>
+        <% members.forEach(member => { %>
+          <tr>
+            <td><%= member.team_name %></td>
+            <td><%= member.username %></td>
+            <td>
+              <% if (member.email) { %>
+                <a href="mailto:<%= encodeURIComponent(member.email) %>"><%= member.email %></a>
+              <% } else { %>
+                <span style="color:var(--text-muted);font-size:0.82rem;">No email</span>
+              <% } %>
+            </td>
+            <td><%= member.role_name %></td>
+            <td><%= member.task_count || 0 %></td>
+            <% if (canRemoveMembers) { %>
+              <td>
+                <% if (canManageUsersRoles) { %>
+                  <% if (member.role_name === 'Admin') { %>
+                    <span style="color:var(--text-muted);font-size:0.82rem;">Protected</span>
+                  <% } else if (member.user_id) { %>
+                    <form action="/users/toggle/<%= member.user_id %>" method="POST" class="inline-form">
+                      <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
+                      <input type="hidden" name="return_to" value="/home" />
+                      <button type="submit" data-no-loading="true" class="<%= member.user_is_active ? 'delete' : '' %>"><%= member.user_is_active ? 'Deactivate' : 'Activate' %></button>
+                    </form>
+                  <% } else { %>
+                    <span style="color:var(--text-muted);font-size:0.82rem;">Protected</span>
+                  <% } %>
+                <% } else if (member.role_name === 'Member' && member.id) { %>
+                  <form action="/teams/members/toggle/<%= member.id %>" method="POST" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
+                    <input type="hidden" name="return_to" value="/home" />
+                    <button type="submit" data-no-loading="true" class="<%= member.user_is_active ? 'delete' : '' %>"><%= member.user_is_active ? 'Deactivate' : 'Activate' %></button>
+                  </form>
+                <% } else { %>
+                  <span style="color:var(--text-muted);font-size:0.82rem;">Protected</span>
+                <% } %>
+              </td>
+            <% } %>
+          </tr>
+        <% }) %>
+      </table>
+    </section>
+
+  </div>
+
+  <footer class="site-footer">
+    <p>
+      Task Flow Footer | <a href="/home">Home</a> | <a href="/tasks">Tasks</a>
+    </p>
+  </footer>
+  <script>
+    (function () {
+      const teamSelect = document.getElementById("leader_team_id");
+      const memberSelect = document.getElementById("replacement_user_id");
+      if (!teamSelect || !memberSelect) return;
+
+      const baseOption = memberSelect.querySelector('option[value=""]');
+      const allOptions = Array.from(memberSelect.querySelectorAll("option[data-team-id]"));
+
+      const syncMembers = () => {
+        const teamId = teamSelect.value;
+        memberSelect.innerHTML = "";
+        if (baseOption) memberSelect.appendChild(baseOption.cloneNode(true));
+        if (!teamId) {
+          memberSelect.disabled = true;
+          return;
+        }
+        const matching = allOptions.filter((option) => option.getAttribute("data-team-id") === teamId);
+        matching.forEach((option) => memberSelect.appendChild(option.cloneNode(true)));
+        memberSelect.disabled = matching.length === 0;
+      };
+
+      teamSelect.addEventListener("change", syncMembers);
+      syncMembers();
+    })();
+  </script>
+  <script src="/buttons.js"></script>
+</body>
+</html>
+
+
+

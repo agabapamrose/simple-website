@@ -1,0 +1,175 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Flow • Home</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="home-page">
+  <%
+    const currentWorkspace    = typeof workspaceView !== 'undefined' ? workspaceView : 'personal';
+    const isAdmin             = currentWorkspace === 'admin';
+    const isTeamWorkspace     = currentWorkspace === 'team';
+    const isTeamLeader        = isTeamWorkspace && roleName === 'Team Leader';
+    const isMember            = isTeamWorkspace && roleName === 'Member';
+    const isPersonal          = currentWorkspace === 'personal';
+    const canWriteTasks       = isPersonal || permissions?.canWriteTasks;
+
+    const safeTotalTasks      = typeof totalTasks      !== 'undefined' ? totalTasks      : 0;
+    const safeCompletedTasks  = typeof completedTasks  !== 'undefined' ? completedTasks  : 0;
+    const safeProgressPercent = typeof progressPercent !== 'undefined' ? progressPercent : 0;
+    const safeTeamStats       = typeof teamStats !== 'undefined' ? teamStats : { totalTasks: 0, completedTasks: 0, progressPercent: 0 };
+    const safeTeamMembers     = typeof teamMembers !== 'undefined' && Array.isArray(teamMembers) ? teamMembers : [];
+    const safeTeamMemberCount = typeof teamMemberCount !== 'undefined' ? teamMemberCount : safeTeamMembers.length;
+    const safeLeaderTeams     = typeof leaderTeams !== 'undefined' && Array.isArray(leaderTeams) ? leaderTeams : [];
+    const safeMemberRoleId    = typeof memberRoleId !== 'undefined' ? memberRoleId : null;
+    const pathName            = typeof currentPath === 'string' ? currentPath : '';
+    const isCurrent           = (targetPath) => pathName === targetPath;
+  %>
+
+  <div class="bg-stage" aria-hidden="true">
+    <div class="bg-slide"></div>
+    <div class="bg-slide"></div>
+    <div class="bg-slide"></div>
+  </div>
+
+  <main class="container">
+    <section class="hero">
+      <h1>
+        <% if (isAdmin) { %>Admin Home<% } %>
+        <% if (isTeamWorkspace) { %>Team Home<% } %>
+        <% if (isPersonal) { %>Task Flow<% } %>
+      </h1>
+      <p class="subtitle">
+        <% if (isAdmin) { %>Admin dashboard - manage users, teams, and accounts.<% } %>
+        <% if (isTeamLeader) { %>Team Leader Dashboard - manage your team and assign tasks.<% } %>
+        <% if (isMember) { %>Welcome back - view your team's tasks below.<% } %>
+        <% if (isPersonal) { %>Plan clearly, focus better, and finish more.<% } %>
+      </p>
+
+      <% if (error) { %><p class="auth-error" style="margin-bottom:10px;"><%= error %></p><% } %>
+      <% if (message) { %><p class="auth-success" style="margin-bottom:10px;"><%= message %></p><% } %>
+
+      <div class="quick-nav">
+        <a class="quick-link active" href="/home" aria-current="page">Home</a>
+        <% if (isAdmin) { %>
+          <a class="quick-link <%= isCurrent('/users-roles') ? 'active' : '' %>" href="/users-roles" <%= isCurrent('/users-roles') ? 'aria-current="page"' : '' %>>Users</a>
+          <a class="quick-link <%= isCurrent('/admin/logs') ? 'active' : '' %>" href="/admin/logs" <%= isCurrent('/admin/logs') ? 'aria-current="page"' : '' %>>Logs</a>
+        <% } else if (isTeamWorkspace) { %>
+          <a class="quick-link <%= isCurrent('/tasks') ? 'active' : '' %>" href="/tasks" <%= isCurrent('/tasks') ? 'aria-current="page"' : '' %>>All Team Tasks</a>
+          <a class="quick-link" href="/tasks?status=Pending">Pending</a>
+          <a class="quick-link" href="/tasks?priority=High">High Priority</a>
+        <% } else { %>
+          <a class="quick-link <%= isCurrent('/tasks') ? 'active' : '' %>" href="/tasks" <%= isCurrent('/tasks') ? 'aria-current="page"' : '' %>>My Tasks</a>
+          <a class="quick-link" href="/tasks?status=Pending">Pending</a>
+          <a class="quick-link" href="/tasks?priority=High">High Priority</a>
+        <% } %>
+        <form action="/logout" method="POST" class="logout-inline">
+          <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
+          <button type="submit" class="clear-btn">Logout</button>
+        </form>
+      </div>
+
+      <% if (isTeamWorkspace) { %>
+        <div class="home-section-label">Team Progress</div>
+        <div class="grid">
+          <article class="metric"><small>Team Tasks</small><strong><%= safeTeamStats.totalTasks %></strong></article>
+          <article class="metric"><small>Completed</small><strong><%= safeTeamStats.completedTasks %></strong></article>
+          <article class="metric"><small>Progress</small><strong><%= safeTeamStats.progressPercent %>%</strong></article>
+          <article class="metric"><small>Team Members</small><strong><%= safeTeamMemberCount %></strong></article>
+        </div>
+        <div class="progress-shell"><div class="progress" style="width:<%= safeTeamStats.progressPercent %>%"></div></div>
+      <% } else { %>
+        <div class="home-section-label">My Progress</div>
+        <div class="grid">
+          <article class="metric"><small>Total Tasks</small><strong><%= safeTotalTasks %></strong></article>
+          <article class="metric"><small>Completed</small><strong><%= safeCompletedTasks %></strong></article>
+          <article class="metric"><small>Progress</small><strong><%= safeProgressPercent %>%</strong></article>
+        </div>
+        <div class="progress-shell"><div class="progress" style="width:<%= safeProgressPercent %>%"></div></div>
+      <% } %>
+    </section>
+
+    <section class="panel">
+      <div class="member-notice">
+        <% if (canWriteTasks && !isMember) { %>
+          <span>Use the Tasks page to add, edit, and delete tasks.</span>
+        <% } else { %>
+          <span>Use the Tasks page to view your assigned tasks.</span>
+        <% } %>
+      </div>
+
+      <% if (isTeamLeader && safeMemberRoleId && safeLeaderTeams.length) { %>
+        <form action="/teams/members/add" method="POST" class="row row-gap" style="margin-top:14px;">
+          <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
+          <input type="hidden" name="role_id" value="<%= safeMemberRoleId %>" />
+          <% if (safeLeaderTeams.length === 1) { %>
+            <input type="hidden" name="team_id" value="<%= safeLeaderTeams[0].id %>" />
+          <% } else { %>
+            <select name="team_id" required>
+              <option value="">Select team</option>
+              <% safeLeaderTeams.forEach(team => { %>
+                <option value="<%= team.id %>"><%= team.name %></option>
+              <% }) %>
+            </select>
+          <% } %>
+          <input type="text" name="new_username" placeholder="Team member name" required />
+          <input type="email" name="new_email" placeholder="Team member email (optional)" />
+          <button type="submit">Add Team Member</button>
+        </form>
+      <% } %>
+
+      <% if (isTeamWorkspace) { %>
+        <div class="table-wrap" style="margin-top:14px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Team Members</th>
+                <th>Email</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (!safeTeamMembers.length) { %>
+                <tr>
+                  <td colspan="3" class="empty-state">No team members found yet.</td>
+                </tr>
+              <% } %>
+              <% safeTeamMembers.forEach(member => { %>
+                <tr>
+                  <td><%= member.username %></td>
+                  <td><%= member.email %></td>
+                  <td><%= member.role_name %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      Task Flow
+      <% if (isTeamWorkspace) { %>
+        | <a href="/tasks">Team Tasks</a>
+        | <a href="/home">Team Home</a>
+      <% } else { %>
+        | <a href="/tasks">My Tasks</a>
+      <% } %>
+    </p>
+    <form action="/account/close" method="POST" class="footer-close-form">
+      <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
+      <button type="submit" class="danger"
+        onclick="return confirm('Close your account? Admin can reopen it later.')">
+        Close My Account
+      </button>
+    </form>
+  </footer>
+  <script src="/buttons.js"></script>
+</body>
+</html>
+
