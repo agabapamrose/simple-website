@@ -24,14 +24,25 @@ function loadDotEnv() {
 loadDotEnv();
 
 const { app, port, initDatabase } = require("./index");
+const host = process.env.HOST || "0.0.0.0";
+const dbRetryDelayMs = Number.parseInt(process.env.DB_INIT_RETRY_MS || "5000", 10);
 
-initDatabase()
-  .then(() => {
-    app.listen(port, () => {
-      console.log(`Server running at http://localhost:${port}`);
-    });
-  })
-  .catch((err) => {
-    console.error("Failed to initialize database:", err);
-    process.exit(1);
+async function initializeDatabaseWithRetry() {
+  for (;;) {
+    try {
+      await initDatabase();
+      console.log("Database initialization completed");
+      return;
+    } catch (err) {
+      console.error("Failed to initialize database, retrying...", err);
+      await new Promise((resolve) => setTimeout(resolve, dbRetryDelayMs));
+    }
+  }
+}
+
+app.listen(port, host, () => {
+  console.log(`Server listening on ${host}:${port}`);
+  initializeDatabaseWithRetry().catch((err) => {
+    console.error("Unexpected database initialization error:", err);
   });
+});
